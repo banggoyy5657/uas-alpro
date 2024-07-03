@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Tembak Burung</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+
+        .tebal {
+            font-weight: bold;
+            display: block;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            border: 2px solid #000;
+            background-color: #fff;
+            margin-top: 20px;
+        }
+
+        #burung, #bonusItem {
+            position: absolute;
+            cursor: pointer;
+        }
+
+        #startButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Game Tembak Burung</h1>
+    <p class="tebal">Skor Tertinggi: <span id="skorTertinggi"></span></p>
+    <p class="tebal">Waktu Total: <span id="waktuTotal"></span></p>
+    <p class="tebal">Skor: <span id="skor">0</span></p>
+    <p class="tebal">Waktu Tersisa: <span id="waktuTersisa">30</span> detik</p>
+    <button id="startButton">Mulai Permainan</button>
+    <div id="gameContainer">
+        <img id="burung">
+        <img id="bonusItem" src="bonus.png" style="display: none; width: 30px; height: 30px;">
+    </div>
+
+    <script>
+        var hitungan = 0;
+        var skor = 0;
+        var waktuMulai;
+        var skorTertinggi = localStorage.getItem("skorTertinggi");
+        var permainanBerlangsung = false;
+        var waktuPermainan = 30; // Waktu permainan dalam detik
+        var intervalGerakBurung, timerPermainan;
+
+        if (skorTertinggi !== null) {
+            document.getElementById("skorTertinggi").innerHTML = skorTertinggi + "s";
+        }
+
+        document.getElementById("startButton").onclick = function () {
+            if (!permainanBerlangsung) {
+                mulaiPermainan();
+            }
+        };
+
+        function mulaiPermainan() {
+            hitungan = 0;
+            skor = 0;
+            document.getElementById("skor").innerHTML = skor;
+            permainanBerlangsung = true;
+            document.getElementById("startButton").disabled = true;
+            document.getElementById("waktuTersisa").innerHTML = waktuPermainan;
+            intervalGerakBurung = setInterval(gerakBurung, 1000);
+            timerPermainan = setInterval(perbaruiWaktuTersisa, 1000);
+            tampilkanGambar();
+            tampilkanBonusItem();
+        }
+
+        function tampilkanGambar() {
+            var atas = Math.random() * (document.getElementById("gameContainer").clientHeight - 60);
+            var kiri = Math.random() * (document.getElementById("gameContainer").clientWidth - 60);
+
+            waktuMulai = new Date().getTime();
+
+            document.getElementById("burung").src = "bird.png";
+            document.getElementById("burung").style.height = 60 + "px";
+            document.getElementById("burung").style.width = 60 + "px";
+            document.getElementById("burung").style.top = atas + "px";
+            document.getElementById("burung").style.left = kiri + "px";
+            document.getElementById("burung").style.display = "block";
+        }
+
+        function gerakBurung() {
+            var atas = Math.random() * (document.getElementById("gameContainer").clientHeight - 60);
+            var kiri = Math.random() * (document.getElementById("gameContainer").clientWidth - 60);
+            document.getElementById("burung").style.top = atas + "px";
+            document.getElementById("burung").style.left = kiri + "px";
+        }
+
+        document.getElementById("burung").onclick = function () {
+            document.getElementById("burung").src = "bom.png";
+            document.getElementById("burung").style.height = 120 + "px";
+            document.getElementById("burung").style.width = 120 + "px";
+            setTimeout(sembunyikanGambar, 500);
+
+            skor++;
+            document.getElementById("skor").innerHTML = skor;
+
+            if (hitungan < 4) {
+                setTimeout(tampilkanGambar, 600);
+                hitungan++;
+            } else {
+                akhiriPermainan();
+            }
+        };
+
+        function sembunyikanGambar() {
+            document.getElementById("burung").style.display = "none";
+        }
+
+        function tampilkanBonusItem() {
+            var atas = Math.random() * (document.getElementById("gameContainer").clientHeight - 30);
+            var kiri = Math.random() * (document.getElementById("gameContainer").clientWidth - 30);
+            document.getElementById("bonusItem").style.top = atas + "px";
+            document.getElementById("bonusItem").style.left = kiri + "px";
+            document.getElementById("bonusItem").style.display = "block";
+            setTimeout(sembunyikanBonusItem, 3000); // Bonus item muncul selama 3 detik
+        }
+
+        function sembunyikanBonusItem() {
+            document.getElementById("bonusItem").style.display = "none";
+            setTimeout(tampilkanBonusItem, 5000); // Tampilkan bonus item setiap 5 detik
+        }
+
+        document.getElementById("bonusItem").onclick = function () {
+            skor += 5; // Bonus item memberikan 5 poin
+            document.getElementById("skor").innerHTML = skor;
+            document.getElementById("bonusItem").style.display = "none";
+        };
+
+        function perbaruiWaktuTersisa() {
+            var waktuTersisa = parseInt(document.getElementById("waktuTersisa").innerHTML);
+            if (waktuTersisa > 0) {
+                document.getElementById("waktuTersisa").innerHTML = waktuTersisa - 1;
+            } else {
+                akhiriPermainan();
+            }
+        }
+
+        function akhiriPermainan() {
+            clearInterval(intervalGerakBurung);
+            clearInterval(timerPermainan);
+            permainanBerlangsung = false;
+            document.getElementById("startButton").disabled = false;
+            alert("Selesai!");
+            var waktuAkhir = new Date().getTime();
+            var waktuTotal = (waktuAkhir - waktuMulai) / 1000;
+            document.getElementById("waktuTotal").innerHTML = waktuTotal + "s";
+            setSkorTertinggi(waktuTotal);
+        }
+
+        function setSkorTertinggi(waktuTotal) {
+            if (skorTertinggi == null || waktuTotal < skorTertinggi) {
+                localStorage.setItem("skorTertinggi", waktuTotal);
+                document.getElementById("skorTertinggi").innerHTML = waktuTotal + "s";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
